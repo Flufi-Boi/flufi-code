@@ -1,0 +1,6 @@
+
+string build = "w 2 square 0 -4 2 6 line 6 10 9 10 cont 9 4 cont 6 4 cutcircle 4.5 10 1.5 13.5 45 cutcircle 4.5 4 1.5 4.5 45 line 4.5 8.5 2 8.5 line 4.5 5.5 2 5.5 cont 2 0 cutcircle .5 8.5 1.5 4.5 45 line .5 10 -4 10 curve -4 10 -10 5 -7 10 curve -10 5 -2 4 -2 7 line -2 2 -2 4"
+string play = "w 3.5 line -7 10 7 0 cont -7 -10 cont -7 10"
+string menu = "w 3.85 line -9 8 9 8 line -9 0 9 0 line -9 -8 9 -8"
+
+string editor = import("./icon.icn")

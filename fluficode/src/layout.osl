@@ -1,0 +1,66 @@
+
+array editors @= [
+  editor.Editor(),
+]
+
+def update() (
+  local screen @= area.boundriesToArea(window.left, window.top, window.right, window.bottom)
+  
+  screen[2] -= 45
+  
+  void files.update([
+    screen[1],
+    screen[2],
+    screen[1] + files.width,
+    screen[4]
+  ])
+  
+  local editorSpace @= area.copy(screen)
+  editorSpace[1] += files.width
+  updateEditors([
+    screen[1] + files.width,
+    screen[2],
+    screen[3],
+    screen[4]
+  ])
+)
+
+def updateEditors(array editorSpace) (
+  local x = editorSpace[1]
+  local sel = null
+  
+  if self.editors.len == 0 (
+    void self.editors.append(editor.Editor())
+  )
+  
+  if editor.selectedEditor > self.editors.len (
+    editor.selectedEditor = self.editors.len
+  )
+  
+  for i self.editors.len (
+    local curEditor @= self.editors[i]
+    local width = area.width(editorSpace) / self.editors.len
+    
+    curEditor.layoutI = i
+    
+    local a @= [x, editorSpace[2], x + width, editorSpace[4]]
+    
+    void curEditor.update(a)
+    if curEditor.layoutI == editor.selectedEditor (
+      sel @= a
+    )
+    
+    x += width
+  )
+  
+  // kinda looks weird imo, could add a setting tho
+  if sel != null and false (
+    goto sel[1] sel[2]
+    pen "down" : c#seco w#2
+    goto sel[3] sel[2]
+    goto sel[3] sel[4]
+    goto sel[1] sel[4]
+    goto sel[1] sel[2]
+    pen "up"
+  )
+)

@@ -1,0 +1,30 @@
+
+object topbar = {
+  name: [
+    { "Copy folder path": def(data) -> (
+      clipboard "set" data.replace("origin/(c) users/" ++ username, "~")
+    ) }
+  ]
+}
+
+object editor = {
+  more: () -> (
+    local arr @= [
+      { "New editor to the left": def() -> (
+        void layout.editors.insert(editor.selectedEditor, editor.Editor())
+      ) },
+      { "New editor to the right": def() -> (
+        void layout.editors.insert(editor.selectedEditor + 1, editor.Editor())
+      ) },
+    ]
+    if layout.editors.len > 1 (
+      void arr.append("-")
+      void arr.append({
+        "Remove editor": def() -> (
+          void layout.editors.delete(editor.selectedEditor)
+        )
+      })
+    )
+    return arr
+  )
+}

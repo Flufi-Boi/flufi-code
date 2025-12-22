@@ -1,0 +1,20 @@
+
+string folder = ""
+object opal = {}
+
+def loadFolder(string uuid) (
+  self.folder = uuid
+  
+  loadOpal()
+)
+
+def loadOpal() (
+  local f @= open(self.folder, [2,3])
+  local opalf @= open(f[2] ++ "/" ++ f[1] ++ "/" ++ "opal.json")
+  if typeof(opalf) == "string" (
+    opalf @= opalf.JsonParse()
+  )
+  if typeof(opalf) == "object" (
+    self.opal @= opalf
+  )
+)

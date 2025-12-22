@@ -1,0 +1,105 @@
+
+number width = 200
+number height = 0
+object opened = {}
+
+number x = 0
+number y = 0
+
+def update(array a) (
+  goto area.centerX(a) area.centerY(a)
+  square area.width(a) area.height(a) : c#prim
+  square area.width(a) - 3 area.height(a) - 3 : c#window_colour
+  
+  c prim
+  frame a[1] a[2] a[3] a[4] self.height (
+    local hover = mouse_x >= frame.left and mouse_x <= frame.right
+    hover = hover and mouse_y >= frame.bottom and mouse_y <= frame.top
+    self.hovered = hover
+    if file_dragging and hover (
+      centext "drop folder here" 9 : c#txtc
+      return
+    )
+    
+    local folder @= open(state.folder)
+    if typeof(folder) != "array" (
+      centext "no open folder" 9 : c#prim
+      return
+    )
+    
+    self.x = frame.left
+    self.y = frame.top + frame.scroll
+    local start = self.y
+    drawContents(folder)
+    self.height = start - self.y
+  )
+)
+
+def drawContents(array items) (
+  items @= items.map(i -> [i, open(i, [1])])
+  
+  local folders @= items.filter(i -> i[2][1] == ".folder")
+  local files @= items.filter(i -> i[2][1] != ".folder")
+  
+  for i folders.len (
+    drawFile(folders[i][1])
+  )
+  for i files.len (
+    drawFile(files[i][1])
+  )
+  // stops compiler from being weird
+  return
+  square
+)
+
+def drawFile(string uuid) (
+  self.y -= 15
+  
+  local f @= open(uuid, [1,2,3,11])
+  
+  goto 0 self.y
+  square frame.width 20 10 0 1
+  rightclick "file" uuid
+  local hover = mouse_touching
+  local click = onclick
+  
+  if hover (
+    square frame.width - 15 15 10 : c#prim
+    cursor "pointer"
+  )
+  
+  goto self.x self.y
+  
+  if f[1] == ".folder" (
+    local open = self.opened[uuid] ?? false
+    
+    icon open ? "down" "right" .45 : chx#15 c#txtc
+    file "render" .6 : chx#20
+    text f[2] 9 : c#txtc chx#15
+    
+    self.x += 20
+    self.y -= 15
+    
+    if open (
+      drawContents(open(uuid))
+    )
+    
+    self.x -= 20
+    
+    if click (
+      self.opened[uuid] = !open
+    )
+  ) else (
+    file "render" .6 : chx#15
+    text f[2] 9 : c#txtc chx#15
+    text f[1] 8 : c#seco
+    self.y -= 15
+    
+    if click (
+      local editor @= utils.getEditorAndAdd()
+      if editor != null (
+        void editor.openFile(uuid)
+      )
+    )
+  )
+)

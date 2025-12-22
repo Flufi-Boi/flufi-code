@@ -1,0 +1,15 @@
+
+number width = 20
+boolean background = true
+
+def update() (
+  goto frame.left + 15 0
+  icon icons.build .6
+  
+  if self.hovered (
+    cursor "pointer"
+    if self.clicked (
+      
+    )
+  )
+)

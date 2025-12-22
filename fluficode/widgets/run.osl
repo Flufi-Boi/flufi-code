@@ -1,0 +1,20 @@
+
+number width = 20
+boolean background = true
+
+def update() (
+  goto 0 0
+  icon icons.play .6
+  
+  if self.hovered (
+    cursor "pointer"
+    if self.clicked (
+      local f @= utils.getMain()
+      if f != null (
+        file "open" f
+        file "start"
+        file "close"
+      )
+    )
+  )
+)

@@ -1,0 +1,1 @@
+c #691f7d c #bf58db w 10 square 0 0 5 5 c #111 w 8 square 0 0 5 5 dot 0 0 c #bf58db w 1.5 line -6 0 -6 4 cutcircle -4 4 2 -4.5 45 line -4 6 -3 6 line -6 2.5 -4 2.5 cutcircle 2 2 2 -13.5 45 line 0 2 0 4 cutcircle 2 4 2 -4.5 45 line 2 0 2.5 0 line 2 6 2.5 6 w 2 line -5.75 -5 0 -5

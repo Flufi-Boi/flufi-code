@@ -1,0 +1,239 @@
+
+number editorI = 0
+number selectedEditor = 0
+number tabI = 0
+
+class Editor (
+  number tabsH = 30
+  
+  def init() (
+    self.tabs @= []
+    self.tabScroll = 0
+    self.selectedTab = 0
+    
+    self.id = editor.editorI.toStr().btoa().trim(1,-3)
+    self.i = editor.editorI
+    editor.editorI ++
+  )
+  
+  def createTab(string kind, string title, string content) (
+    local dta @= {
+      kind,
+      title,
+      content,
+      id: editor.tabI.toStr().btoa().trim(1,-3)
+    }
+    editor.tabI ++
+    
+    void self.tabs.append(dta)
+    void self.updateTab(dta)
+    self.selectedTab = self.tabs.len
+    return dta
+  )
+  def openFile(string uuid) (
+    local f @= open(uuid, [1,2,3,4])
+    local t @= self.createTab("file", f[2], f[4])
+    t.ohf @= ohf.getCompiledOhf(f[1])
+    t.file_uuid = uuid
+  )
+  def updateTab(object tab) (
+    inputs[self.id ++ tab.id] @= tab.content.split("\n")
+  )
+  
+  def update(array a) (
+    goto area.centerX(a) area.centerY(a)
+    square area.width(a) area.height(a) : c#prim
+    if onclick (
+      editor.selectedEditor = self.i
+    )
+    square area.width(a) - 3 area.height(a) - 3 : c#window_colour
+    
+    if self.selectedTab > self.tabs.len (
+      self.selectedTab = self.tabs.len
+    )
+    if self.selectedTab == 0 (
+      self.selectedTab = 1
+    )
+    
+    void self.updateMore([
+      a[3] - 30,
+      a[2],
+      a[3],
+      a[2] - self.tabsH
+    ])
+    
+    void self.updateTabs([
+      a[1],
+      a[2],
+      a[3] - 30,
+      a[2] - self.tabsH
+    ])
+    
+    void self.updateContent([
+      a[1],
+      a[2] - self.tabsH,
+      a[3],
+      a[4]
+    ])
+  )
+  
+  def updateMore(array a) (
+    goto a[1] a[2]
+    c prim
+    pen "size" 1.5
+    pen "down"
+    goto a[1] a[4]
+    goto a[3] a[4]
+    pen "up"
+    
+    goto area.centerX(a) area.centerY(a)
+    square area.width(a) - 3.5 area.height(a) - 3.5 : c#window_colour hover_c#prim
+    if mouse_touching (
+      cursor "pointer"
+      if onclick (
+        local p @= Promise.new(() -> (
+          defer
+          while mouse_down (
+            defer
+          )
+          open_rightclick menus.editor.more()
+        ))
+        editor.selectedEditor = self.layoutI
+      )
+    )
+    icon "more-vertical" .65 : c#txtc
+  )
+  
+  def updateTabs(array a) (
+    goto a[1] a[4]
+    c prim
+    pen "size" 1.5
+    pen "down"
+    goto a[3] a[4]
+    pen "up"
+    
+    local width = 0
+    for i self.tabs.len (
+      local tab @= self.tabs[i]
+      tab.width = tab.title.len * 8 + 30 + 30
+      width += tab.width
+    )
+    
+    frame a[1] a[2] a[3] a[4] 0 (
+      goto 0 0
+      square frame.width frame.height 0 0 1
+      if mouse_touching (
+        self.tabScroll += scroll.x.velocity + scroll.y.velocity * -1.5 * scroll.multiplier
+      )
+      self.tabScroll = max(min(self.tabScroll, width - frame.width), 0)
+      
+      local x = frame.left - self.tabScroll
+      local rm = 0
+      for i self.tabs.len (
+        //log tab x
+        local tab @= self.tabs[i]
+        
+        x += tab.width / 2
+        
+        goto x 0
+        square tab.width frame.height 0 0 1
+        if mouse_touching (
+          if onclick (
+            self.selectedTab = i
+            void self.updateTab(self.tabs[i])
+          )
+          goto x frame.bottom + 2
+          square tab.width 1 : c#prim
+        )
+        
+        if self.selectedTab == i (
+          goto x frame.bottom + 2
+          square tab.width 1 : c#seco
+        )
+        
+        goto x 0
+        centext tab.title 8 : c#txtc chx#-10
+        
+        x += tab.width / 2
+        
+        icn = "close"
+        
+        goto x - 20 0
+        square 15 15 0 0 1
+        hoverIcn = mouse_touching
+        
+        if tab.kind == "file" (
+          local content = inputs[self.id ++ tab.id].join("\n")
+          local edited = content != open(tab.file_uuid)
+          if "w".onKeyDown() (
+            log content open(tab.file_uuid) edited
+          )
+          
+          if edited and !hoverIcn (
+            icn = "w 17.5 dot 0 0"
+          )
+        )
+        
+        icon icn .5 : c#txtc
+        if hoverIcn (
+          cursor "pointer"
+          if onclick (
+            rm = i
+          )
+        )
+        
+        c prim
+        pen "size" 1
+        goto x frame.top
+        pen "down"
+        goto x frame.bottom
+        pen "up"
+      )
+      
+      if rm != 0 (
+        void self.tabs.delete(rm)
+      )
+      
+      local selTab @= self.tabs[self.selectedTab]
+      if selTab.kind == "file" (
+        if "control".isKeyDown() and "s".onKeyDown() (
+          file "open" selTab.file_uuid
+          file "set" 4 selTab.content
+          file "close"
+        )
+      )
+    )
+  )
+  
+  def updateContent(array a) (
+    if self.tabs.len == 0 (
+      goto area.centerX(a) area.centerY(a)
+      centext "no open files :(" 9 : c#prim
+      return
+    )
+    
+    void self.updateTextbox([
+      a[1],
+      a[2],
+      a[3],
+      a[4]
+    ])
+  )
+  def updateTextbox(array a) (
+    local tab @= self.tabs[self.selectedTab]
+    
+    if tab != null (
+      goto area.centerX(a) area.centerY(a)
+      textbox area.width(a) area.height(a) self.id ++ tab.id 0 {
+        line_numbers: {
+          bg_colour: prim,
+          text_colour: txtc
+        },
+        sel_colour: seco,
+        text_colour: txtc,
+        ohf: tab.ohf
+      }
+      tab.content = inputs[self.id ++ tab.id].join("\n")
+    )
+  )
+)

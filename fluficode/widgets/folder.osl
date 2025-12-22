@@ -1,0 +1,28 @@
+
+boolean enabled = false
+boolean background = true
+
+def earlyUpdate() (
+  local folder @= open(state.folder)
+  self.enabled = folder != null
+)
+
+def update() (
+  local folder = open(state.folder, [2, 3])
+  self.width = folder[1].len * 10 + 10
+  goto 0 0
+  centext folder[1] 10 : c#txtc
+  if mouse_touching (
+    cursor "pointer"
+    if onclick (
+      local p @= Promise.new(() -> (
+        defer
+        while mouse_down (
+          defer
+        )
+        open_rightclick menus.topbar.name self.folder[2] ++ "/" ++ self.folder[1]
+      ))
+      p.worker.folder @= folder
+    )
+  )
+)

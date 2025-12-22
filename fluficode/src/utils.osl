@@ -1,0 +1,30 @@
+
+def getEditorAndAdd() (
+  if layout.editors.len == 0 (
+    void layout.editors.append(editor.Editor())
+  )
+  return getEditor()
+)
+
+def getEditor() (
+  local editorI = editor.selectedEditor ?? 1
+  local editor @= layout.editors.filter(e -> e.i == editorI)[1]
+  return editor
+)
+
+def getTab() (
+  local e @= getEditor()
+  return e.tabs[e.selectedTab]
+)
+
+def getMain() (
+  void state.loadOpal()
+  
+  local opalMain = state.opal.main
+  if typeof(opalMain) == "string" (
+    local folder @= open(state.folder, [2,3])
+    return folder[2] ++ "/" ++ folder[1] ++ "/" ++ opalMain
+  )
+  
+  return self.getTab().file_uuid
+)

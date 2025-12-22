@@ -1,0 +1,47 @@
+
+def compileOhf(ohf) (
+  if typeof(ohf) == "string" (
+    ohf @= ohf.JsonParse()
+  )
+  if typeof(ohf) != "object" (
+    return ""
+  )
+  
+  local output @= {
+    tokens: {},
+    overrides: {},
+    parser: {}
+  }
+
+  try (
+    if ohf.categories != null (
+      each o ohf.categories.getValues() (
+        each r o.tokens (
+          output.tokens["tkn:" ++ r] = o.color
+        )
+      )
+    )
+  
+    if ohf.overrides != null (
+      each o ohf.overrides.getKeys() (
+        output.overrides[o] = ohf.overrides[o]
+      )
+    )
+  
+    output.parser = ohf.parser ?? {}
+    output.highlighter = ohf.highlighter ?? {}
+  ) catch o (
+    error o
+    return ""
+  )
+
+  return output
+)
+
+def getCompiledOhf(string kind) (
+  return compileOhf(getOhf(kind))
+)
+
+def getOhf(string kind) (
+  return open("~/application data/Studio/" ++ kind.trim(2,-1) ++ ".ohf")
+)

@@ -1,0 +1,130 @@
+
+boolean debug = false
+array defaultButtons = [
+  {
+    icon: "close",
+    click: window.close
+  },
+  {
+    icon: "down",
+    click: window.minimise
+  },
+  {
+    icon: "maximise",
+    click: window.fullscreen
+  }
+]
+
+def updateWinButtons(array buttons, boolean background) (
+  if background (
+    local w = buttons.len * 25
+    
+    loc -2 2 w / -2 - 7.5 -20
+    square w - 5 18 10 : c#prim
+  )
+  
+  loc -2 2 -20 -20
+  change_x 25
+  for i buttons.len (
+    local button @= buttons[i]
+    
+    c txtc
+    icon button.icon 0.6 * (button.icon_size ?? 1) : hover_size#1.1 chx#-25
+    if mouse_touching (
+      cursor "pointer"
+      if onclick (
+        void button.click()
+      )
+    )
+  )
+  change_x -25
+  self.buttonsX = x_position
+)
+
+def updateWidgets(array widgets, string side) (
+  local mul = side == "right" ? -1 1
+  local x = side == "right" ? buttonsX window.left + 50
+  local visualI = 0
+  for i widgets.len (
+    local widget @= widgets[i]
+    if widget.earlyUpdate != null (
+      void widget.earlyUpdate()
+    )
+    if widget.enabled ?? true (
+      visualI ++
+      local w = widget.width ?? 20
+      
+      if visualI != 1 (
+        x += (widget.background ? 10 7.5) * mul
+      ) else (
+        x += widget.background ? 0 -10 * mul
+      )
+      x += w / 2 * mul
+      
+      goto x window.top - 20
+      if widget.background and widget.showBackground ?? true (
+        square w - 5 15 15 : c#prim
+      )
+      
+      square w - 5 15 15 0 1
+      widget.hovered = mouse_touching
+      widget.clicked = onclick
+      
+      frame x - (w / 2) - 5 window.top - 5 x + (w / 2) + 5 window.top - 35 (
+        if widget.update != null (
+          c txtc
+          goto 0 0
+          void widget.update()
+        )
+      )
+      
+      x += w / 2 * mul
+      x += (widget.background ? 10 7.5) * mul
+    )
+  )
+  
+  if side == "right" (
+    self.dragbox[2][3] = x - window.right - 5
+  )
+  if side == "left" (
+    self.dragbox[1][3] = x - window.left + 5
+  )
+)
+
+def updateLeftSection() (
+  goto window.left + 20 window.top - 20
+  square 25 25 0 0 1 : c#fff
+  if mouse_touching (
+    icon icons.menu 1 : c#txtc
+    cursor "pointer"
+  ) else (
+    icon icons.editor 1.25
+  )
+)
+
+def resetDragbox() (
+  self.dragbox @= [[2,2,0,0],[-2,2,-90,-40]]
+)
+
+def applyDragbox() (
+  window.setDragbox(self.dragbox[1], self.dragbox[2])
+  
+  if self.debug (
+    c #fff
+    loc self.dragbox[1][1] self.dragbox[1][2] self.dragbox[1][3] self.dragbox[1][4]
+    pen "down"
+    loc self.dragbox[2][1] self.dragbox[2][2] self.dragbox[2][3] self.dragbox[2][4]
+    pen "up"
+  )
+)
+
+def update() (
+  void self.resetDragbox()
+  
+  void self.updateWinButtons(self.defaultButtons, false)
+  void self.updateWidgets(widgets.left, "left")
+  void self.updateWidgets(widgets.right, "right")
+  void self.updateLeftSection()
+  
+  void self.applyDragbox()
+)
