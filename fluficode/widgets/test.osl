@@ -1,0 +1,10 @@
+
+number width = 30
+boolean background = true
+
+def update() (
+  centext "hi" 10
+  if self.clicked (
+    void popup.openPopup(popup.popups.testPopup)
+  )
+)

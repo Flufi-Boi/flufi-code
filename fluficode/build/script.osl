@@ -3,10 +3,29 @@ opal_imports = {}
 def import(path) (
   switch path (
 
+case "./widgets/test.osl"
+  class __imports__0f6dd266b195efa95c41308bdc56048a (
+    number width = 30
+    boolean background = true
+    
+    def update() (
+      centext "hi" 10
+      if self.clicked (
+        void popup.openPopup(popup.popups.testPopup)
+      )
+    )
+  )
+  return __imports__0f6dd266b195efa95c41308bdc56048a
 case "./widgets/run.osl"
   class __imports__7b17b4f0ec5dec079dbf75a42dd885a6 (
     number width = 20
     boolean background = true
+        
+    def earlyUpdate() (
+      local f @= utils.getMain()
+      
+      self.enabled = f != null
+    )
     
     def update() (
       goto 0 0
@@ -49,7 +68,7 @@ case "./widgets/folder.osl"
             while mouse_down (
               defer
             )
-            open_rightclick menus.topbar.name self.folder[2] ++ "/" ++ self.folder[1]
+            open_rightclick menus.topbar.name() self.folder[2] ++ "/" ++ self.folder[1]
           ))
           p.worker.folder @= folder
         )
@@ -60,6 +79,59 @@ case "./widgets/folder.osl"
 case "./icon.icn"
   return "  c #691f7d c #bf58db w 10 square 0 0 5 5 c #111 w 8 square 0 0 5 5 dot 0 0 c #bf58db w 1.5 line -6 0 -6 4 cutcircle -4 4 2 -4.5 45 line -4 6 -3 6 line -6 2.5 -4 2.5 cutcircle 2 2 2 -13.5 45 line 0 2 0 4 cutcircle 2 4 2 -4.5 45 line 2 0 2.5 0 line 2 6 2.5 6 w 2 line -5.75 -5 0 -5"
 
+case "./src/popup.osl"
+  class __imports__61f43d578401814c74122435d0e6eb11 (
+    object popups = {
+      testPopup: {
+        update: () -> (
+          centext "hi" 10
+        )
+      }  
+    }
+    
+    def openPopup(object popup) (
+      window.create(window.file.uuid, {
+        passed_data: {
+          popup
+        },
+      })
+    )
+    
+    def update() (
+      void self.updateTopbar()
+    )
+    
+    def updateTopbar() (
+      //void topbar.resetDragbox()
+      
+      void topbar.updateWinButtons(topbar.defaultButtons, true)
+    )
+  )
+  return __imports__61f43d578401814c74122435d0e6eb11
+case "./src/picker.osl"
+  class __imports__e7e0c81ced745ae6e1b615bbfa83b58f (
+    object pickers = {}
+    
+    def update() (
+      if new_transmit (
+        local keys @= pickers.getKeys()
+        for i keys.len (
+          if transmit_source == keys[i] (
+            local p @= pickers[keys[i]]
+            void p[1](open(transmit_data), transmit_data, p[2])
+            void pickers.delete(keys[i])
+          )
+        )
+        new_transmit = false
+      )
+    )
+    
+    def openPicker(array types, function callback, arg) (
+      file "pick" types
+      picker.pickers[data] @= [callback, arg]
+    )
+  )
+  return __imports__e7e0c81ced745ae6e1b615bbfa83b58f
 case "./src/settings.osl"
   class __imports__eed2d8cf3c2aa3bfe5551e9b06c28d44 (
     object entries = {
@@ -182,33 +254,95 @@ case "./src/save.osl"
   return __imports__cc67bf7e28ec083154c7e851dbd8117f
 case "./src/menus.osl"
   class __imports__25b12eaccc0fc7b33e81f6504e5d7022 (
+    def createMenu() (
+      return []
+    )
+    def addButton(array menu, string text, function func) (
+      local obj @= menus.empty()
+      obj[text.toTitle()] @= func
+      void menu.append(obj)
+    )
+    def addSeperator(array menu) (
+      void menu.append("-")
+    )
+    
+    empty @= () -> (
+      local obj @= {"bleh":def()->()}
+      void obj.delete("bleh")
+      return obj
+    )
+    
     object topbar = {
-      name: [
-        { "Copy folder path": def(data) -> (
+      name: () -> (
+        local menu @= menus.createMenu()
+        
+        void menus.addButton(menu, "copy folder path", (data) -> (
           clipboard "set" data.replace("origin/(c) users/" ++ username, "~")
-        ) }
-      ]
+        ))
+        
+        return menu
+      ),
+      
+      top_menus: {
+        file: () -> (
+          local menu @= menus.createMenu()
+          
+          void menus.addButton(menu, "new", () -> (
+            topbar.menusOpen = false
+            
+            void state.clearFolder()
+          ))
+          
+          void menus.addSeperator(menu)
+          
+          void menus.addButton(menu, "open file", (data) -> (
+            topbar.menusOpen = false
+            
+            void picker.openPicker([], def(content, uuid) -> (
+              local editor @= utils.getEditorAndAdd()
+              if editor != null (
+                void editor.openFile(uuid)
+              )
+            ))
+          ))
+          void menus.addButton(menu, "open folder", (data) -> (
+            topbar.menusOpen = false
+            
+            void picker.openPicker(["folder"], def(content, uuid) -> (
+              void state.loadFolder(uuid)
+            ))
+          ))
+          
+          return menu
+        ),
+        edit: () -> (
+          local menu @= menus.createMenu()
+          
+          return menu
+        )
+      }
     }
     
     object editor = {
       more: () -> (
-        local arr @= [
-          { "New editor to the left": def() -> (
-            void layout.editors.insert(editor.selectedEditor, editor.Editor())
-          ) },
-          { "New editor to the right": def() -> (
-            void layout.editors.insert(editor.selectedEditor + 1, editor.Editor())
-          ) },
-        ]
+        log menus
+        local menu @= menus.createMenu()
+        
+        void menus.addButton(menu, "new editor to the left", () -> (
+          void layout.editors.insert(editor.selectedEditor, editor.Editor())
+        ))
+        void menus.addButton(menu, "new editor to the right", () -> (
+          void layout.editors.insert(editor.selectedEditor + 1, editor.Editor())
+        ))
+        
         if layout.editors.len > 1 (
-          void arr.append("-")
-          void arr.append({
-            "Remove editor": def() -> (
-              void layout.editors.delete(editor.selectedEditor)
-            )
-          })
+          void menus.addSeperator(menu)
+          void menus.addButton(menu, "remove Editor", () -> (
+            void layout.editors.delete(editor.selectedEditor)
+          ))
         )
-        return arr
+        
+        return menu
       )
     }
   )
@@ -221,7 +355,6 @@ case "./src/utils.osl"
       )
       return getEditor()
     )
-    
     def getEditor() (
       local editorI = editor.selectedEditor ?? 1
       local editor @= layout.editors.filter(e -> e.i == editorI)[1]
@@ -410,9 +543,24 @@ case "./src/state.osl"
     object opal = {}
     
     def loadFolder(string uuid) (
-      self.folder = uuid
+      if uuid == "" (
+        self.clearFolder()
+        return
+      )
       
+      local f @= open(uuid, [1,2,3])
+      if f[1] != ".folder" (
+        say "given folder is not a folder"
+        return
+      )
+      
+      self.folder = uuid
       loadOpal()
+    )
+    
+    def clearFolder() (
+      self.folder = ""
+      self.opal @= {}
     )
     
     def loadOpal() (
@@ -445,6 +593,8 @@ case "./src/topbar.osl"
       }
     ]
     
+    boolean menusOpen = false
+    
     def updateWinButtons(array buttons, boolean background) (
       if background (
         local w = buttons.len * 25
@@ -455,17 +605,31 @@ case "./src/topbar.osl"
       
       loc -2 2 -20 -20
       change_x 25
-      for i buttons.len (
+      local i = 0
+      local len = buttons.len
+      while i < len (
+        i ++
+      //for i buttons.len (
+        local p = performance
         local button @= buttons[i]
+        local p2 = performance
         
         c txtc
+        local p3 = performance
         icon button.icon 0.6 * (button.icon_size ?? 1) : hover_size#1.1 chx#-25
+        
+        local p4 = performance
         if mouse_touching (
           cursor "pointer"
           if onclick (
             void button.click()
           )
         )
+        local p5 = performance
+        if background (
+          log p6 p p - p6
+        )
+        local p6 = performance
       )
       change_x -25
       self.buttonsX = x_position
@@ -473,7 +637,7 @@ case "./src/topbar.osl"
     
     def updateWidgets(array widgets, string side) (
       local mul = side == "right" ? -1 1
-      local x = side == "right" ? buttonsX window.left + 50
+      local x = side == "right" ? buttonsX window.left + 50 + 35
       local visualI = 0
       for i widgets.len (
         local widget @= widgets[i]
@@ -513,23 +677,67 @@ case "./src/topbar.osl"
         )
       )
       
+      if side == "left" (
+        self.dragbox[1][3] = x - window.left - 5
+      )
       if side == "right" (
         self.dragbox[2][3] = x - window.right - 5
-      )
-      if side == "left" (
-        self.dragbox[1][3] = x - window.left + 5
       )
     )
     
     def updateLeftSection() (
       goto window.left + 20 window.top - 20
-      square 25 25 0 0 1 : c#fff
-      if mouse_touching (
-        icon icons.menu 1 : c#txtc
-        cursor "pointer"
-      ) else (
+      
+      if !self.menusOpen (
+        square 25 25 0 0 1 : c#fff
         icon icons.editor 1.25
+        change_x 35
       )
+      
+      icon icons.menu 1 : c#txtc
+      if mouse_touching (
+        cursor "pointer"
+        if onclick (
+          self.menusOpen = !self.menusOpen
+        )
+      )
+    )
+    
+    def updateMenus() (
+      local x = frame.left
+      
+      local keys @= menus.topbar.top_menus.getKeys()
+      for i keys.len (
+        local name = keys[i].toTitle()
+        local width = name.len * 9 + 20
+        
+        x += width / 2 + 7.5
+        
+        goto x 0
+        square width - 5 15 15 10 : c#prim hover_c#seco
+        local click = onclick
+        centext name 9 : c#txtc
+        
+        x += width / 2 + 10
+        
+        x -= width + 12.5
+        
+        goto x - 5 -25
+        if click (
+          local p @= Promise.new(() -> (
+            defer
+            while mouse_down (
+              defer
+            )
+            open_rightclick self.menu() ?? []
+          ))
+          p.worker.menu @= menus.topbar.top_menus[keys[i]]
+        )
+        
+        x += width + 12.5
+      )
+      
+      self.dragbox[1][3] = x - frame.left + 40
     )
     
     def resetDragbox() (
@@ -542,7 +750,7 @@ case "./src/topbar.osl"
       if self.debug (
         c #fff
         loc self.dragbox[1][1] self.dragbox[1][2] self.dragbox[1][3] self.dragbox[1][4]
-        pen "down"
+        pen "down" : w#1
         loc self.dragbox[2][1] self.dragbox[2][2] self.dragbox[2][3] self.dragbox[2][4]
         pen "up"
       )
@@ -552,7 +760,13 @@ case "./src/topbar.osl"
       void self.resetDragbox()
       
       void self.updateWinButtons(self.defaultButtons, false)
-      void self.updateWidgets(widgets.left, "left")
+      if self.menusOpen (
+        frame window.left + 40 window.top self.buttonsX window.top - 40 (
+          void self.updateMenus()
+        )
+      ) else (
+        void self.updateWidgets(widgets.left, "left")
+      )
       void self.updateWidgets(widgets.right, "right")
       void self.updateLeftSection()
       
@@ -586,6 +800,27 @@ case "./src/layout.osl"
         screen[1] + files.width,
         screen[4]
       ])
+      
+      if mouse_y > screen[4] and mouse_y < screen[2] (
+        if abs(screen[1] + files.width - mouse_x) < 5 (
+          cursor "col-resize"
+          goto mouse_x mouse_y
+          square 100 100 0 0 1
+          if onclick (
+            self.filesResizing = true
+          )
+        )
+      )
+      
+      if !mouse_down (
+        self.filesResizing = false
+      )
+      
+      if self.filesResizing (
+        files.width = mouse_x - screen[1]
+      )
+      files.width = min(files.width, area.width(screen) - 200)
+      files.width = max(files.width, 150)
       
       local editorSpace @= area.copy(screen)
       editorSpace[1] += files.width
@@ -680,6 +915,12 @@ case "./src/editor.osl"
       def updateTab(object tab) (
         inputs[self.id ++ tab.id] @= tab.content.split("\n")
       )
+      def selectTab(number i) (
+        self.selectedTab = i
+        if self.tabs[self.selectedTab] != null (
+          void self.updateTab(self.tabs[self.selectedTab])
+        )
+      )
       
       def update(array a) (
         goto area.centerX(a) area.centerY(a)
@@ -690,10 +931,10 @@ case "./src/editor.osl"
         square area.width(a) - 3 area.height(a) - 3 : c#window_colour
         
         if self.selectedTab > self.tabs.len (
-          self.selectedTab = self.tabs.len
+          void self.selectTab(self.tabs.len)
         )
         if self.selectedTab == 0 (
-          self.selectedTab = 1
+          void self.selectTab(1)
         )
         
         void self.updateMore([
@@ -780,8 +1021,7 @@ case "./src/editor.osl"
             square tab.width frame.height 0 0 1
             if mouse_touching (
               if onclick (
-                self.selectedTab = i
-                void self.updateTab(self.tabs[i])
+                void self.selectTab(i)
               )
               goto x frame.bottom + 2
               square tab.width 1 : c#prim
@@ -806,9 +1046,6 @@ case "./src/editor.osl"
             if tab.kind == "file" (
               local content = inputs[self.id ++ tab.id].join("\n")
               local edited = content != open(tab.file_uuid)
-              if "w".onKeyDown() (
-                log content open(tab.file_uuid) edited
-              )
               
               if edited and !hoverIcn (
                 icn = "w 17.5 dot 0 0"
@@ -835,12 +1072,14 @@ case "./src/editor.osl"
             void self.tabs.delete(rm)
           )
           
-          local selTab @= self.tabs[self.selectedTab]
-          if selTab.kind == "file" (
-            if "control".isKeyDown() and "s".onKeyDown() (
-              file "open" selTab.file_uuid
-              file "set" 4 selTab.content
-              file "close"
+          if editor.selectedEditor == self.i (
+            local selTab @= self.tabs[self.selectedTab]
+            if selTab.kind == "file" (
+              if "control".isKeyDown() and "s".onKeyDown() (
+                file "open" selTab.file_uuid
+                file "set" 4 selTab.content
+                file "close"
+              )
             )
           )
         )
@@ -927,41 +1166,55 @@ object utils @= import("./src/utils.osl")
 object menus @= import("./src/menus.osl")
 object save @= import("./src/save.osl")
 object settings @= import("./src/settings.osl")
+object picker @= import("./src/picker.osl")
+object popup @= import("./src/popup.osl")
 object widgets @= {
   left: [
-    import("./widgets/folder.osl")
+    import("./widgets/folder.osl"),
   ],
   right: [
     import("./widgets/run.osl"),
+    import("./widgets/test.osl"),
     //import("./widgets/build.osl")
   ]
 }
+
+boolean isPopup = passed_data.popup != null
+object popupData @= passed_data.popup ?? {}
 
 void save.init()
 void settings.load()
 
 //void state.loadFolder("08b90df05d7840ba31c0e71340b2043b")
 
-permission "request" "file admin"
+if !window.permissions.contains("file admin") (
+  permission "request" "file admin"
+)
 
 mainloop:
   wt:load_theme
   
-  if file_dropped != 0 (
-    local f @= open(file_dropped, [1,4,14])
-    if f[1] == ".shortcut" (
-      local f @= open(f[2], [1,4,14])
-      file_dropped = f[3]
-    )
-    if files.hovered (
-      if f[1] == ".folder" (
-        void state.loadFolder(f[3])
-      ) else (
-        say "cannot drag non folder into files"
+  void picker.update()
+  
+  if isPopup (
+    void popup.update()
+  ) else (
+    if file_dropped != 0 (
+      local f @= open(file_dropped, [1,4,14])
+      if f[1] == ".shortcut" (
+        local f @= open(f[2], [1,4,14])
+        file_dropped = f[3]
       )
+      if files.hovered (
+        if f[1] == ".folder" (
+          void state.loadFolder(f[3])
+        ) else (
+          say "cannot drag non folder into files"
+        )
+      )
+      file_dropped = 0
     )
-    file_dropped = 0
+    void layout.update()
+    void topbar.update()
   )
-  void layout.update()
-  void topbar.update()
 void window.show()

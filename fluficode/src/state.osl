@@ -3,9 +3,24 @@ string folder = ""
 object opal = {}
 
 def loadFolder(string uuid) (
-  self.folder = uuid
+  if uuid == "" (
+    self.clearFolder()
+    return
+  )
   
+  local f @= open(uuid, [1,2,3])
+  if f[1] != ".folder" (
+    say "given folder is not a folder"
+    return
+  )
+  
+  self.folder = uuid
   loadOpal()
+)
+
+def clearFolder() (
+  self.folder = ""
+  self.opal @= {}
 )
 
 def loadOpal() (

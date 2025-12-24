@@ -1,0 +1,26 @@
+
+object popups = {
+  testPopup: {
+    update: () -> (
+      centext "hi" 10
+    )
+  }  
+}
+
+def openPopup(object popup) (
+  window.create(window.file.uuid, {
+    passed_data: {
+      popup
+    },
+  })
+)
+
+def update() (
+  void self.updateTopbar()
+)
+
+def updateTopbar() (
+  //void topbar.resetDragbox()
+  
+  void topbar.updateWinButtons(topbar.defaultButtons, true)
+)

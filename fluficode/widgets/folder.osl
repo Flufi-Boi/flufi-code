@@ -20,7 +20,7 @@ def update() (
         while mouse_down (
           defer
         )
-        open_rightclick menus.topbar.name self.folder[2] ++ "/" ++ self.folder[1]
+        open_rightclick menus.topbar.name() self.folder[2] ++ "/" ++ self.folder[1]
       ))
       p.worker.folder @= folder
     )

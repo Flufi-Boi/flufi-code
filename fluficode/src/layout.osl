@@ -15,6 +15,27 @@ def update() (
     screen[4]
   ])
   
+  if mouse_y > screen[4] and mouse_y < screen[2] (
+    if abs(screen[1] + files.width - mouse_x) < 5 (
+      cursor "col-resize"
+      goto mouse_x mouse_y
+      square 100 100 0 0 1
+      if onclick (
+        self.filesResizing = true
+      )
+    )
+  )
+  
+  if !mouse_down (
+    self.filesResizing = false
+  )
+  
+  if self.filesResizing (
+    files.width = mouse_x - screen[1]
+  )
+  files.width = min(files.width, area.width(screen) - 200)
+  files.width = max(files.width, 150)
+  
   local editorSpace @= area.copy(screen)
   editorSpace[1] += files.width
   updateEditors([

@@ -39,6 +39,12 @@ class Editor (
   def updateTab(object tab) (
     inputs[self.id ++ tab.id] @= tab.content.split("\n")
   )
+  def selectTab(number i) (
+    self.selectedTab = i
+    if self.tabs[self.selectedTab] != null (
+      void self.updateTab(self.tabs[self.selectedTab])
+    )
+  )
   
   def update(array a) (
     goto area.centerX(a) area.centerY(a)
@@ -49,10 +55,10 @@ class Editor (
     square area.width(a) - 3 area.height(a) - 3 : c#window_colour
     
     if self.selectedTab > self.tabs.len (
-      self.selectedTab = self.tabs.len
+      void self.selectTab(self.tabs.len)
     )
     if self.selectedTab == 0 (
-      self.selectedTab = 1
+      void self.selectTab(1)
     )
     
     void self.updateMore([
@@ -139,8 +145,7 @@ class Editor (
         square tab.width frame.height 0 0 1
         if mouse_touching (
           if onclick (
-            self.selectedTab = i
-            void self.updateTab(self.tabs[i])
+            void self.selectTab(i)
           )
           goto x frame.bottom + 2
           square tab.width 1 : c#prim
@@ -165,9 +170,6 @@ class Editor (
         if tab.kind == "file" (
           local content = inputs[self.id ++ tab.id].join("\n")
           local edited = content != open(tab.file_uuid)
-          if "w".onKeyDown() (
-            log content open(tab.file_uuid) edited
-          )
           
           if edited and !hoverIcn (
             icn = "w 17.5 dot 0 0"
@@ -194,12 +196,14 @@ class Editor (
         void self.tabs.delete(rm)
       )
       
-      local selTab @= self.tabs[self.selectedTab]
-      if selTab.kind == "file" (
-        if "control".isKeyDown() and "s".onKeyDown() (
-          file "open" selTab.file_uuid
-          file "set" 4 selTab.content
-          file "close"
+      if editor.selectedEditor == self.i (
+        local selTab @= self.tabs[self.selectedTab]
+        if selTab.kind == "file" (
+          if "control".isKeyDown() and "s".onKeyDown() (
+            file "open" selTab.file_uuid
+            file "set" 4 selTab.content
+            file "close"
+          )
         )
       )
     )

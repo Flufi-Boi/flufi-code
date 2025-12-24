@@ -1,30 +1,92 @@
 
+def createMenu() (
+  return []
+)
+def addButton(array menu, string text, function func) (
+  local obj @= menus.empty()
+  obj[text.toTitle()] @= func
+  void menu.append(obj)
+)
+def addSeperator(array menu) (
+  void menu.append("-")
+)
+
+empty @= () -> (
+  local obj @= {"bleh":def()->()}
+  void obj.delete("bleh")
+  return obj
+)
+
 object topbar = {
-  name: [
-    { "Copy folder path": def(data) -> (
+  name: () -> (
+    local menu @= menus.createMenu()
+    
+    void menus.addButton(menu, "copy folder path", (data) -> (
       clipboard "set" data.replace("origin/(c) users/" ++ username, "~")
-    ) }
-  ]
+    ))
+    
+    return menu
+  ),
+  
+  top_menus: {
+    file: () -> (
+      local menu @= menus.createMenu()
+      
+      void menus.addButton(menu, "new", () -> (
+        topbar.menusOpen = false
+        
+        void state.clearFolder()
+      ))
+      
+      void menus.addSeperator(menu)
+      
+      void menus.addButton(menu, "open file", (data) -> (
+        topbar.menusOpen = false
+        
+        void picker.openPicker([], def(content, uuid) -> (
+          local editor @= utils.getEditorAndAdd()
+          if editor != null (
+            void editor.openFile(uuid)
+          )
+        ))
+      ))
+      void menus.addButton(menu, "open folder", (data) -> (
+        topbar.menusOpen = false
+        
+        void picker.openPicker(["folder"], def(content, uuid) -> (
+          void state.loadFolder(uuid)
+        ))
+      ))
+      
+      return menu
+    ),
+    edit: () -> (
+      local menu @= menus.createMenu()
+      
+      return menu
+    )
+  }
 }
 
 object editor = {
   more: () -> (
-    local arr @= [
-      { "New editor to the left": def() -> (
-        void layout.editors.insert(editor.selectedEditor, editor.Editor())
-      ) },
-      { "New editor to the right": def() -> (
-        void layout.editors.insert(editor.selectedEditor + 1, editor.Editor())
-      ) },
-    ]
+    log menus
+    local menu @= menus.createMenu()
+    
+    void menus.addButton(menu, "new editor to the left", () -> (
+      void layout.editors.insert(editor.selectedEditor, editor.Editor())
+    ))
+    void menus.addButton(menu, "new editor to the right", () -> (
+      void layout.editors.insert(editor.selectedEditor + 1, editor.Editor())
+    ))
+    
     if layout.editors.len > 1 (
-      void arr.append("-")
-      void arr.append({
-        "Remove editor": def() -> (
-          void layout.editors.delete(editor.selectedEditor)
-        )
-      })
+      void menus.addSeperator(menu)
+      void menus.addButton(menu, "remove Editor", () -> (
+        void layout.editors.delete(editor.selectedEditor)
+      ))
     )
-    return arr
+    
+    return menu
   )
 }

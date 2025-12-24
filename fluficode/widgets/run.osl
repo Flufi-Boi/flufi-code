@@ -1,6 +1,12 @@
 
 number width = 20
 boolean background = true
+    
+def earlyUpdate() (
+  local f @= utils.getMain()
+  
+  self.enabled = f != null
+)
 
 def update() (
   goto 0 0

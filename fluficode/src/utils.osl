@@ -5,7 +5,6 @@ def getEditorAndAdd() (
   )
   return getEditor()
 )
-
 def getEditor() (
   local editorI = editor.selectedEditor ?? 1
   local editor @= layout.editors.filter(e -> e.i == editorI)[1]

@@ -17,41 +17,55 @@ object utils @= import("./src/utils.osl")
 object menus @= import("./src/menus.osl")
 object save @= import("./src/save.osl")
 object settings @= import("./src/settings.osl")
+object picker @= import("./src/picker.osl")
+object popup @= import("./src/popup.osl")
 object widgets @= {
   left: [
-    import("./widgets/folder.osl")
+    import("./widgets/folder.osl"),
   ],
   right: [
     import("./widgets/run.osl"),
+    import("./widgets/test.osl"),
     //import("./widgets/build.osl")
   ]
 }
+
+boolean isPopup = passed_data.popup != null
+object popupData @= passed_data.popup ?? {}
 
 void save.init()
 void settings.load()
 
 //void state.loadFolder("08b90df05d7840ba31c0e71340b2043b")
 
-permission "request" "file admin"
+if !window.permissions.contains("file admin") (
+  permission "request" "file admin"
+)
 
 mainloop:
   wt:load_theme
   
-  if file_dropped != 0 (
-    local f @= open(file_dropped, [1,4,14])
-    if f[1] == ".shortcut" (
-      local f @= open(f[2], [1,4,14])
-      file_dropped = f[3]
-    )
-    if files.hovered (
-      if f[1] == ".folder" (
-        void state.loadFolder(f[3])
-      ) else (
-        say "cannot drag non folder into files"
+  void picker.update()
+  
+  if isPopup (
+    void popup.update()
+  ) else (
+    if file_dropped != 0 (
+      local f @= open(file_dropped, [1,4,14])
+      if f[1] == ".shortcut" (
+        local f @= open(f[2], [1,4,14])
+        file_dropped = f[3]
       )
+      if files.hovered (
+        if f[1] == ".folder" (
+          void state.loadFolder(f[3])
+        ) else (
+          say "cannot drag non folder into files"
+        )
+      )
+      file_dropped = 0
     )
-    file_dropped = 0
+    void layout.update()
+    void topbar.update()
   )
-  void layout.update()
-  void topbar.update()
 void window.show()

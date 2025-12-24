@@ -1,0 +1,20 @@
+object pickers = {}
+
+def update() (
+  if new_transmit (
+    local keys @= pickers.getKeys()
+    for i keys.len (
+      if transmit_source == keys[i] (
+        local p @= pickers[keys[i]]
+        void p[1](open(transmit_data), transmit_data, p[2])
+        void pickers.delete(keys[i])
+      )
+    )
+    new_transmit = false
+  )
+)
+
+def openPicker(array types, function callback, arg) (
+  file "pick" types
+  picker.pickers[data] @= [callback, arg]
+)
