@@ -3,19 +3,6 @@ opal_imports = {}
 def import(path) (
   switch path (
 
-case "./widgets/test.osl"
-  class __imports__0f6dd266b195efa95c41308bdc56048a (
-    number width = 30
-    boolean background = true
-    
-    def update() (
-      centext "hi" 10
-      if self.clicked (
-        void popup.openPopup(popup.popups.testPopup)
-      )
-    )
-  )
-  return __imports__0f6dd266b195efa95c41308bdc56048a
 case "./widgets/run.osl"
   class __imports__7b17b4f0ec5dec079dbf75a42dd885a6 (
     number width = 20
@@ -1174,7 +1161,7 @@ object widgets @= {
   ],
   right: [
     import("./widgets/run.osl"),
-    import("./widgets/test.osl"),
+    //import("./widgets/test.osl"),
     //import("./widgets/build.osl")
   ]
 }
