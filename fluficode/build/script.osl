@@ -479,8 +479,8 @@ case "./src/files.osl"
       goto 0 self.y
       square frame.width 20 10 0 1
       rightclick "file" uuid
-      local hover = mouse_touching
-      local click = onclick
+      local hover = mouse_touching and !layout.filesResizing and !layout.filesResizingHover
+      local click = onclick and !layout.filesResizing
       
       if hover (
         square frame.width - 15 15 10 : c#prim
@@ -781,16 +781,11 @@ case "./src/layout.osl"
       
       screen[2] -= 45
       
-      void files.update([
-        screen[1],
-        screen[2],
-        screen[1] + files.width,
-        screen[4]
-      ])
-      
+      self.filesResizingHover = false
       if mouse_y > screen[4] and mouse_y < screen[2] (
         if abs(screen[1] + files.width - mouse_x) < 5 (
           cursor "col-resize"
+          self.filesResizingHover = true
           goto mouse_x mouse_y
           square 100 100 0 0 1
           if onclick (
@@ -805,9 +800,17 @@ case "./src/layout.osl"
       
       if self.filesResizing (
         files.width = mouse_x - screen[1]
+        cursor "col-resize"
       )
       files.width = min(files.width, area.width(screen) - 200)
       files.width = max(files.width, 150)
+      
+      void files.update([
+        screen[1],
+        screen[2],
+        screen[1] + files.width,
+        screen[4]
+      ])
       
       local editorSpace @= area.copy(screen)
       editorSpace[1] += files.width
