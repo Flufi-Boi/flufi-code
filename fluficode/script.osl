@@ -1,6 +1,8 @@
 import "window_tools" as "wt"
 import as "glass" from "packages"
 
+file "use_type" "osl"
+
 // fpp boilerplate
 __import @= import;import @= i -> (i.endsWith(".osl") ? __import(i) open(i))
 build ??= { built: false, package: import("./opal.json").JsonParse() }

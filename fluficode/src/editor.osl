@@ -11,7 +11,8 @@ class Editor (
     self.tabScroll = 0
     self.selectedTab = 0
     
-    self.id = editor.editorI.toStr().btoa().trim(1,-3)
+    // .btoa().trim(1,-3)
+    self.id = editor.editorI.toStr()
     self.i = editor.editorI
     editor.editorI ++
   )
@@ -21,8 +22,9 @@ class Editor (
       kind,
       title,
       content,
-      id: editor.tabI.toStr().btoa().trim(1,-3)
+      id: editor.tabI.toStr()
     }
+    log editor.tabI.toStr()
     editor.tabI ++
     
     void self.tabs.append(dta)
