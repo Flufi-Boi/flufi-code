@@ -403,7 +403,6 @@ case "./src/ohf.osl"
         error o
         return ""
       )
-      log output
       return output
     )
     
@@ -431,7 +430,7 @@ case "./src/files.osl"
       square area.width(a) - 3 area.height(a) - 3 : c#window_colour
       
       c prim
-      frame a[1] a[2] a[3] a[4] self.height (
+      frame a[1] a[2] a[3] a[4] self.height "files" (
         local hover = mouse_x >= frame.left and mouse_x <= frame.right
         hover = hover and mouse_y >= frame.bottom and mouse_y <= frame.top
         self.hovered = hover
@@ -888,9 +887,8 @@ case "./src/editor.osl"
           kind,
           title,
           content,
-          id: editor.tabI.toStr()
+          id: OuidNew() ++ editor.tabI.toStr()
         }
-        log editor.tabI.toStr()
         editor.tabI ++
         
         void self.tabs.append(dta)

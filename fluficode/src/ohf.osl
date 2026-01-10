@@ -34,7 +34,6 @@ def compileOhf(ohf) (
     error o
     return ""
   )
-  log output
   return output
 )
 

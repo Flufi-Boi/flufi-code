@@ -12,7 +12,7 @@ def update(array a) (
   square area.width(a) - 3 area.height(a) - 3 : c#window_colour
   
   c prim
-  frame a[1] a[2] a[3] a[4] self.height (
+  frame a[1] a[2] a[3] a[4] self.height "files" (
     local hover = mouse_x >= frame.left and mouse_x <= frame.right
     hover = hover and mouse_y >= frame.bottom and mouse_y <= frame.top
     self.hovered = hover

@@ -22,9 +22,8 @@ class Editor (
       kind,
       title,
       content,
-      id: editor.tabI.toStr()
+      id: OuidNew() ++ editor.tabI.toStr()
     }
-    log editor.tabI.toStr()
     editor.tabI ++
     
     void self.tabs.append(dta)
