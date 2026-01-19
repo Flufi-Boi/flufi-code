@@ -2,6 +2,14 @@
 number width = 20
 boolean background = true
 
+def earlyUpdate() (
+  local f @= utils.getMain()
+  
+  local comp = compiler.getOslCompiler()
+  self.comp @= comp
+  self.enabled = f != null and comp != null
+)
+
 def update() (
   goto frame.left + 15 0
   icon icons.build .6
@@ -9,7 +17,7 @@ def update() (
   if self.hovered (
     cursor "pointer"
     if self.clicked (
-      
+      void self.comp.build(utils.folderUuidToPath(state.folder))
     )
   )
 )

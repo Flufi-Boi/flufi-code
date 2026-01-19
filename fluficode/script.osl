@@ -21,6 +21,16 @@ object save @= import("./src/save.osl")
 object settings @= import("./src/settings.osl")
 object picker @= import("./src/picker.osl")
 object popup @= import("./src/popup.osl")
+log import("./src/terminal.osl")
+object terminal @= import("./src/terminal.osl").terminal
+object compiler @= import("./src/compiler.osl")
+
+object rawCompilers @= {
+  fpp: import("./src/compilers/fpp.osl")
+}
+
+void compiler.addOpalLikeCompiler("fpp", rawCompilers.fpp)
+
 object widgets @= {
   left: [
     import("./widgets/folder.osl"),
@@ -28,7 +38,7 @@ object widgets @= {
   right: [
     import("./widgets/run.osl"),
     //import("./widgets/test.osl"),
-    //import("./widgets/build.osl")
+    import("./widgets/build.osl")
   ]
 }
 

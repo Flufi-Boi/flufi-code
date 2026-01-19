@@ -27,3 +27,15 @@ def getMain() (
   
   return self.getTab().file_uuid
 )
+
+def fileUuidToPath(string uuid) (
+  local fdata @= open(uuid, [1,2,3])
+  
+  return fdata[3] ++ "/" ++ fdata[2] ++ fdata[1]
+)
+
+def folderUuidToPath(string uuid) (
+  local fdata @= open(uuid, [2,3])
+  
+  return fdata[2] ++ "/" ++ fdata[1]
+)

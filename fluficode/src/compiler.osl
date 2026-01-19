@@ -1,0 +1,41 @@
+
+object compilers @= {}
+
+def addCompiler(string name, object compiler, object extra) (
+  compiler.extra @= extra
+  self.compilers[name] @= compiler
+)
+
+def addOpalLikeCompiler(string name, object mod) (
+  // override open
+  mod.compilerObj.open @= def(path) -> (
+    local path = terminal.pwd ++ "/" ++ path
+    if !path.startsWith("origin/") (
+      path = parseFilePath(path)
+    )
+    file "exists" path
+    local data = exists ? open(path) null
+    return { exists, data }
+  )
+  
+  void self.addCompiler(name, {
+    build: def(string pwd) -> (
+      local usrPath = "origin/(c) users/" ++ username
+      if pwd.toLower().startsWith(usrPath.toLower()) (
+        pwd = "~" ++ pwd.trim(usrPath.len + 1, -1)
+      )
+      terminal.pwd = pwd
+      self.extra.pwd = pwd
+      void self.extra.build()
+    )
+  }, mod.compilerObj)
+)
+
+// langs
+def getOslCompiler() (
+  local out = null
+  
+  out ??= self.compilers.fpp
+  
+  return out
+)

@@ -1,0 +1,54 @@
+
+class terminal (
+  lines = []
+  waiting = false
+  show_input = true
+  input_message = null
+  pwd = user_folder
+  
+  def writeLine(data) (
+    if data.contains("\n") (
+      local parts = data.split("\n")
+      for i parts.len (
+        void self.lines.append(parts[i])
+      )
+    ) else (
+      void self.lines.append(data)
+    )
+  )
+  
+  def write(data) (
+    self.lines[self.lines.len] ++= data
+  )
+  
+  def clear() (
+    terminal.lines = []
+  )
+  
+  def input(query) (
+    self.show_input = true
+    self.input_message = query
+    while self.show_input (
+      defer
+    )
+    self.input_message = null
+    return last.pop()
+  )
+  
+  def user_start() (
+    if self.input_message != null (
+      return self.input_message ++ ": "
+    )
+    local pos = self.pwd
+    if pos == user_folder (
+      pos = "~"
+    ) else (
+      pos = pos.split("/")[-1]
+    )
+    return username ++ "@originos " ++ pos ++ " % "
+  )
+
+  def run(cmd) (
+    return terminal_worker.evalCmd(cmd)
+  )
+)
