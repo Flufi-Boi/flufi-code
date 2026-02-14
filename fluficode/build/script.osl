@@ -11,9 +11,9 @@ case "./widgets/build.osl"
     def earlyUpdate() (
       local f @= utils.getMain()
       
-      local comp = compiler.getOslCompiler()
+      local comp = compiler.getAppropriateCompiler(open(f, [1])[1])
       self.comp @= comp
-      self.enabled = f != null and comp != null
+      self.enabled = f != null and utils.canRun(f) and comp != null
     )
     
     def update() (
@@ -23,7 +23,7 @@ case "./widgets/build.osl"
       if self.hovered (
         cursor "pointer"
         if self.clicked (
-          void self.comp.build(utils.folderUuidToPath(state.folder))
+          void self.comp.build(utils.folderUuidToPath(state.folder), utils.getMain())
         )
       )
     )
@@ -37,7 +37,7 @@ case "./widgets/run.osl"
     def earlyUpdate() (
       local f @= utils.getMain()
       
-      self.enabled = f != null
+      self.enabled = f != null and utils.canRun(f)
     )
     
     def update() (
@@ -413,6 +413,84 @@ case "./src/compilers/fpp.osl"
     object compilerObj @= fpp
   )
   return __imports__fb470ba1c39d1455e38658fdff807d2e
+case "./src/widget_manager.osl"
+  class __imports__f066216d1e62e76d77ab6d8d3c7d86c4 (
+    def load() (
+      local folder @= open("~/fluficode/widgets.folder")
+      for i folder.len (
+        local f @= open(folder[i], [2,1])
+        if f[2] == ".osl" (
+          load_widget(folder[i])
+        )
+      )
+    )
+    
+    def load_widget(string uuid) (
+      local f = open(uuid, [1,2,3])
+      local mod @= __import(f[3] ++ "/" ++ f[2] ++ f[1])
+      
+      if mod.init != null (
+        void mod.init()
+      )
+      
+      switch mod.side (
+        case "left"
+          widgets.left.append(mod)
+          break
+        case "right"
+          widgets.right.append(mod)
+          break
+        
+        default
+          error "widget '" ++ f[2] ++ f[1] ++ "' has an invalid or no specified side, widget not added"
+          return
+      )
+    )
+  )
+  return __imports__f066216d1e62e76d77ab6d8d3c7d86c4
+case "./src/plugin_manager.osl"
+  class __imports__11b6ec88cb3655c40375a38a0333a8c4 (
+    object plugins = {}
+    
+    def load() (
+      local folder @= open("~/fluficode/plugins.folder")
+      if typeof(folder) != "array" (
+        log typeof(folder)
+        return
+      )
+      
+      for i folder.len (
+        local f @= open(folder[i], [2,1])
+        if f[2] == ".osl" (
+          load_plugin(folder[i])
+        )
+      )
+    )
+    
+    def load_plugin(string uuid) (
+      local f = open(uuid, [1,2,3])
+      local mod @= __import(f[3] ++ "/" ++ f[2] ++ f[1])
+      
+      if mod.id == null (
+        error "plugin '" ++ f[2] ++ f[1] ++ "' does not have an id"
+        return
+      )
+      if mod.name == null (
+        warn "plugin '" ++ f[2] ++ f[1] ++ "' does not have an name"
+      )
+      
+      local plugin @= {
+        mod
+      }
+      
+      if mod.init != null (
+        void mod.init()
+      )
+      
+      self.plugins[mod.id] @= plugin
+    )
+  )
+  return __imports__11b6ec88cb3655c40375a38a0333a8c4
 case "./src/compiler.osl"
   class __imports__6409edc6fbbe89eafe887edcac9839db (
     object compilers @= {}
@@ -455,34 +533,90 @@ case "./src/compiler.osl"
       
       return out
     )
+    
+    def getAppropriateCompiler(string type) (
+      switch type (
+        case ".osl"
+          return self.getOslCompiler()
+      )
+    )
   )
   return __imports__6409edc6fbbe89eafe887edcac9839db
 case "./src/popup.osl"
   class __imports__61f43d578401814c74122435d0e6eb11 (
-    object popups = {
-      testPopup: {
-        update: () -> (
-          centext "hi" 10
-        )
-      }  
-    }
+    object popups = {}
     
-    def openPopup(object popup) (
+    def registerPopup(string owner, string name, object data) (
+      self.popups[owner ++ name] @= data
+    )
+    def getPopup(string owner, string name) (
+      return self.popups[owner ++ name]
+    )
+    
+    def openPopupRaw(object popup) (
       window.create(window.file.uuid, {
         passed_data: {
           popup
         },
       })
     )
+    def openPopup(string owner, string name) (
+      void self.openPopupRaw(self.getPopup(owner, name))
+    )
+    
+    def getProp(string name, default) (
+      local data = popupData[name]
+      if typeof(data) == "function" (
+        data = data()
+      )
+      data ??= default
+      return data
+    )
+    
+    def init() (
+      local win_width = self.getProp("win_width", 300)
+      local win_height = self.getProp("win_height", 450)
+      
+      local min_width = self.getProp("min_width", 100)
+      local min_height = self.getProp("min_height", 100)
+      
+      local resizable = self.getProp("resizable", true)
+      
+      min_width = min(min_width, win_width)
+      min_height = min(min_height, win_height)
+      
+      window.resize(win_width, win_height + 35)
+      window.min_width = min_width
+      window.min_height = min_height + 35
+      window.setResizable(resizable)
+    )
     
     def update() (
       void self.updateTopbar()
+      
+      local width = self.getProp("width", 0)
+      local height = self.getProp("height", 0)
+      
+      frame window.left window.top - 40 window.right window.bottom [width, height] "popup_frame" (
+        goto 0 0
+        c txtc
+        if popupData.update != null (
+          void popupData.update()
+        )
+      )
     )
     
     def updateTopbar() (
-      //void topbar.resetDragbox()
+      void topbar.resetDragbox()
       
-      void topbar.updateWinButtons(topbar.defaultButtons, true)
+      local name = self.getProp("name", "fluficode popup")
+      local buttons @= self.getProp("buttons", topbar.defaultPopupButtons)
+      
+      goto 0 window.top - 20
+      square window.width 40 : c#prim
+      loc 2 2 10 -20
+      text name 10 : c#txtc
+      void topbar.updateWinButtons(buttons, false)
     )
   )
   return __imports__61f43d578401814c74122435d0e6eb11
@@ -756,6 +890,10 @@ case "./src/utils.osl"
       return self.getTab().file_uuid
     )
     
+    def canRun(string path) (
+      return open(path, [1])[1] == ".osl"
+    )
+    
     def fileUuidToPath(string uuid) (
       local fdata @= open(uuid, [1,2,3])
       
@@ -981,6 +1119,12 @@ case "./src/topbar.osl"
         click: window.fullscreen
       }
     ]
+    array defaultPopupButtons = [
+      {
+        icon: "close",
+        click: window.close
+      }
+    ]
     
     boolean menusOpen = false
     
@@ -999,26 +1143,17 @@ case "./src/topbar.osl"
       while i < len (
         i ++
       //for i buttons.len (
-        local p = performance
         local button @= buttons[i]
-        local p2 = performance
         
         c txtc
-        local p3 = performance
         icon button.icon 0.6 * (button.icon_size ?? 1) : hover_size#1.1 chx#-25
         
-        local p4 = performance
         if mouse_touching (
           cursor "pointer"
           if onclick (
             void button.click()
           )
         )
-        local p5 = performance
-        if background (
-          log p6 p p - p6
-        )
-        local p6 = performance
       )
       change_x -25
       self.buttonsX = x_position
@@ -1538,64 +1673,7 @@ case "./src/area.osl"
       return area[2] - area[4]
     )
   )
-  return __imports__2d64d682ed6b046178c913d48fbef49a
-case "./src/terminal.osl"
-  class __imports__d556ecafbb2343f66266bae2e6fd11c4 (
-    class terminal (
-      lines = []
-      waiting = false
-      show_input = true
-      input_message = null
-      pwd = user_folder
-      
-      def writeLine(data) (
-        if data.contains("\n") (
-          local parts = data.split("\n")
-          for i parts.len (
-            void self.lines.append(parts[i])
-          )
-        ) else (
-          void self.lines.append(data)
-        )
-      )
-      
-      def write(data) (
-        self.lines[self.lines.len] ++= data
-      )
-      
-      def clear() (
-        terminal.lines = []
-      )
-      
-      def input(query) (
-        self.show_input = true
-        self.input_message = query
-        while self.show_input (
-          defer
-        )
-        self.input_message = null
-        return last.pop()
-      )
-      
-      def user_start() (
-        if self.input_message != null (
-          return self.input_message ++ ": "
-        )
-        local pos = self.pwd
-        if pos == user_folder (
-          pos = "~"
-        ) else (
-          pos = pos.split("/")[-1]
-        )
-        return username ++ "@originos " ++ pos ++ " % "
-      )
-    
-      def run(cmd) (
-        return terminal_worker.evalCmd(cmd)
-      )
-    )
-  )
-  return __imports__d556ecafbb2343f66266bae2e6fd11c4)
+  return __imports__2d64d682ed6b046178c913d48fbef49a)
 )
 import "window_tools" as "wt"
 import as "glass" from "packages"
@@ -1620,9 +1698,10 @@ object save @= import("./src/save.osl")
 object settings @= import("./src/settings.osl")
 object picker @= import("./src/picker.osl")
 object popup @= import("./src/popup.osl")
-log import("./src/terminal.osl")
 object terminal @= import("./src/terminal.osl").terminal
 object compiler @= import("./src/compiler.osl")
+object plugin_manager @= import("./src/plugin_manager.osl")
+object widget_manager @= import("./src/widget_manager.osl")
 
 object rawCompilers @= {
   fpp: import("./src/compilers/fpp.osl")
@@ -1646,11 +1725,19 @@ object popupData @= passed_data.popup ?? {}
 
 void save.init()
 void settings.load()
+if !isPopup (
+  void plugin_manager.load()
+  void widget_manager.load()
+)
 
 //void state.loadFolder("08b90df05d7840ba31c0e71340b2043b")
 
 if !window.permissions.contains("file admin") (
   permission "request" "file admin"
+)
+
+if isPopup (
+  void popup.init()
 )
 
 mainloop:

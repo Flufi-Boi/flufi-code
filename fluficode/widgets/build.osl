@@ -5,9 +5,9 @@ boolean background = true
 def earlyUpdate() (
   local f @= utils.getMain()
   
-  local comp = compiler.getOslCompiler()
+  local comp = compiler.getAppropriateCompiler(open(f, [1])[1])
   self.comp @= comp
-  self.enabled = f != null and comp != null
+  self.enabled = f != null and utils.canRun(f) and comp != null
 )
 
 def update() (
@@ -17,7 +17,7 @@ def update() (
   if self.hovered (
     cursor "pointer"
     if self.clicked (
-      void self.comp.build(utils.folderUuidToPath(state.folder))
+      void self.comp.build(utils.folderUuidToPath(state.folder), utils.getMain())
     )
   )
 )

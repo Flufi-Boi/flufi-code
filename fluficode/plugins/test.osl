@@ -1,0 +1,29 @@
+
+string id = "funny_plugin"
+string name = "funny plugin"
+
+def init() (
+  void popup.registerPopup(self.id, "popup", {
+    name: "funny",
+    win_width: 100,
+    win_height: 100,
+    resizable: false,
+    update: def() -> (
+      centext ":3" 10
+    )
+  })
+  
+  void widgets.right.append({
+    width: 25,
+    background: true,
+    update: def() -> (
+      centext ":3" 10
+      if self.hovered (
+        cursor "pointer"
+        if self.clicked (
+          popup.openPopup("funny_plugin", "popup")
+        )
+      )
+    )
+  })
+)

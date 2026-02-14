@@ -21,9 +21,10 @@ object save @= import("./src/save.osl")
 object settings @= import("./src/settings.osl")
 object picker @= import("./src/picker.osl")
 object popup @= import("./src/popup.osl")
-log import("./src/terminal.osl")
 object terminal @= import("./src/terminal.osl").terminal
 object compiler @= import("./src/compiler.osl")
+object plugin_manager @= import("./src/plugin_manager.osl")
+object widget_manager @= import("./src/widget_manager.osl")
 
 object rawCompilers @= {
   fpp: import("./src/compilers/fpp.osl")
@@ -47,11 +48,19 @@ object popupData @= passed_data.popup ?? {}
 
 void save.init()
 void settings.load()
+if !isPopup (
+  void plugin_manager.load()
+  void widget_manager.load()
+)
 
 //void state.loadFolder("08b90df05d7840ba31c0e71340b2043b")
 
 if !window.permissions.contains("file admin") (
   permission "request" "file admin"
+)
+
+if isPopup (
+  void popup.init()
 )
 
 mainloop:

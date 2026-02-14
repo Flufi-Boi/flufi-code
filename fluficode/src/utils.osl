@@ -28,6 +28,10 @@ def getMain() (
   return self.getTab().file_uuid
 )
 
+def canRun(string path) (
+  return open(path, [1])[1] == ".osl"
+)
+
 def fileUuidToPath(string uuid) (
   local fdata @= open(uuid, [1,2,3])
   

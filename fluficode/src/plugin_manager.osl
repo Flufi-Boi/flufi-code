@@ -1,0 +1,40 @@
+
+object plugins = {}
+
+def load() (
+  local folder @= open("~/fluficode/plugins.folder")
+  if typeof(folder) != "array" (
+    log typeof(folder)
+    return
+  )
+  
+  for i folder.len (
+    local f @= open(folder[i], [2,1])
+    if f[2] == ".osl" (
+      load_plugin(folder[i])
+    )
+  )
+)
+
+def load_plugin(string uuid) (
+  local f = open(uuid, [1,2,3])
+  local mod @= __import(f[3] ++ "/" ++ f[2] ++ f[1])
+  
+  if mod.id == null (
+    error "plugin '" ++ f[2] ++ f[1] ++ "' does not have an id"
+    return
+  )
+  if mod.name == null (
+    warn "plugin '" ++ f[2] ++ f[1] ++ "' does not have an name"
+  )
+  
+  local plugin @= {
+    mod
+  }
+  
+  if mod.init != null (
+    void mod.init()
+  )
+  
+  self.plugins[mod.id] @= plugin
+)

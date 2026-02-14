@@ -1,0 +1,32 @@
+
+def load() (
+  local folder @= open("~/fluficode/widgets.folder")
+  for i folder.len (
+    local f @= open(folder[i], [2,1])
+    if f[2] == ".osl" (
+      load_widget(folder[i])
+    )
+  )
+)
+
+def load_widget(string uuid) (
+  local f = open(uuid, [1,2,3])
+  local mod @= __import(f[3] ++ "/" ++ f[2] ++ f[1])
+  
+  if mod.init != null (
+    void mod.init()
+  )
+  
+  switch mod.side (
+    case "left"
+      widgets.left.append(mod)
+      break
+    case "right"
+      widgets.right.append(mod)
+      break
+    
+    default
+      error "widget '" ++ f[2] ++ f[1] ++ "' has an invalid or no specified side, widget not added"
+      return
+  )
+)

@@ -39,3 +39,10 @@ def getOslCompiler() (
   
   return out
 )
+
+def getAppropriateCompiler(string type) (
+  switch type (
+    case ".osl"
+      return self.getOslCompiler()
+  )
+)

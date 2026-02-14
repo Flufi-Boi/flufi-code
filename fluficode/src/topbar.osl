@@ -14,6 +14,12 @@ array defaultButtons = [
     click: window.fullscreen
   }
 ]
+array defaultPopupButtons = [
+  {
+    icon: "close",
+    click: window.close
+  }
+]
 
 boolean menusOpen = false
 
@@ -32,26 +38,17 @@ def updateWinButtons(array buttons, boolean background) (
   while i < len (
     i ++
   //for i buttons.len (
-    local p = performance
     local button @= buttons[i]
-    local p2 = performance
     
     c txtc
-    local p3 = performance
     icon button.icon 0.6 * (button.icon_size ?? 1) : hover_size#1.1 chx#-25
     
-    local p4 = performance
     if mouse_touching (
       cursor "pointer"
       if onclick (
         void button.click()
       )
     )
-    local p5 = performance
-    if background (
-      log p6 p p - p6
-    )
-    local p6 = performance
   )
   change_x -25
   self.buttonsX = x_position

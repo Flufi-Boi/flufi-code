@@ -1,26 +1,75 @@
 
-object popups = {
-  testPopup: {
-    update: () -> (
-      centext "hi" 10
-    )
-  }  
-}
+object popups = {}
 
-def openPopup(object popup) (
+def registerPopup(string owner, string name, object data) (
+  self.popups[owner ++ name] @= data
+)
+def getPopup(string owner, string name) (
+  return self.popups[owner ++ name]
+)
+
+def openPopupRaw(object popup) (
   window.create(window.file.uuid, {
     passed_data: {
       popup
     },
   })
 )
+def openPopup(string owner, string name) (
+  void self.openPopupRaw(self.getPopup(owner, name))
+)
+
+def getProp(string name, default) (
+  local data = popupData[name]
+  if typeof(data) == "function" (
+    data = data()
+  )
+  data ??= default
+  return data
+)
+
+def init() (
+  local win_width = self.getProp("win_width", 300)
+  local win_height = self.getProp("win_height", 450)
+  
+  local min_width = self.getProp("min_width", 100)
+  local min_height = self.getProp("min_height", 100)
+  
+  local resizable = self.getProp("resizable", true)
+  
+  min_width = min(min_width, win_width)
+  min_height = min(min_height, win_height)
+  
+  window.resize(win_width, win_height + 35)
+  window.min_width = min_width
+  window.min_height = min_height + 35
+  window.setResizable(resizable)
+)
 
 def update() (
   void self.updateTopbar()
+  
+  local width = self.getProp("width", 0)
+  local height = self.getProp("height", 0)
+  
+  frame window.left window.top - 40 window.right window.bottom [width, height] "popup_frame" (
+    goto 0 0
+    c txtc
+    if popupData.update != null (
+      void popupData.update()
+    )
+  )
 )
 
 def updateTopbar() (
-  //void topbar.resetDragbox()
+  void topbar.resetDragbox()
   
-  void topbar.updateWinButtons(topbar.defaultButtons, true)
+  local name = self.getProp("name", "fluficode popup")
+  local buttons @= self.getProp("buttons", topbar.defaultPopupButtons)
+  
+  goto 0 window.top - 20
+  square window.width 40 : c#prim
+  loc 2 2 10 -20
+  text name 10 : c#txtc
+  void topbar.updateWinButtons(buttons, false)
 )

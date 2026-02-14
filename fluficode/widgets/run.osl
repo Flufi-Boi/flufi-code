@@ -5,7 +5,7 @@ boolean background = true
 def earlyUpdate() (
   local f @= utils.getMain()
   
-  self.enabled = f != null
+  self.enabled = f != null and utils.canRun(f)
 )
 
 def update() (
